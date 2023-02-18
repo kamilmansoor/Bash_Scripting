@@ -1,0 +1,182 @@
+CASE STATEMENT
+
+#!/bin/bash
+
+
+
+case $1 in
+
+1|3)
+ echo "Print 1"
+;;
+2) echo "Print 2"
+;;
+*)
+   echo "Print *"
+;;
+esac
+
+____________________
+
+Task#1:
+Q1. Write a script to read a digit from 0-9 and print its equivalent word?
+For example: If the end_user enter 0 then it must show Zero on output.
+
+
+#!/bin/bash
+read -p "Enter your value: " digit
+
+case $digit in
+
+0)
+echo "zero"
+;;
+
+1)
+echo "one"
+;;
+
+2)
+echo "two"
+;;
+
+3)
+echo "three"
+;;
+
+4)
+echo "four"
+;;
+
+5)
+echo "five"
+;;
+
+6)
+echo "six"
+;;
+
+7)
+echo "seven"
+;;
+
+8)
+echo "eight"
+;;
+
+9)
+echo "nine"
+;;
+
+
+*)
+    echo  "Please enter only a digit from 0 to 9"
+    ;;
+esac
+
+__________________________________________________
+
+Task#2
+Q2. Write a script that accepts a single character and check weather the given character is alphabet or digit or special character.
+For example: If a write @ in it then output need to show special character.
+Tips: Going to use regex in case statements.
+
+#!/bin/bash
+read -p "Enter your character please!: " character
+
+
+case $character in
+
+[[:digit:]])                                                 
+echo "Its a digit"
+;;
+
+[[:alpha:]])                                                
+echo "Its an alphabet"
+;;
+
+[[:punct:]])			          
+echo "Its an special character"
+;;
+
+*)
+    echo  "invalid input"
+    ;;
+esac
+
+
+[[:digit:]]        represents a single  digit character from 0 to 9
+[[:alpha:]]      represents a single alphabetic character from a to z or A to Z
+[[:punct:]]      represents all special characters but one at a time
+
+
+
+__________________________________________________
+
+Task #4
+Q4. Write a script that reads two integers numbers and perform required mathematical operations.
+
+1) Addition
+2) Subtraction
+3) Multiplication
+4) Division
+
+read -p "Enter first interger :" i
+read -p "Enter second integer :" j
+read -p "Enter operation code from 1 to 4 :" code
+
+case $code in
+
+1)
+echo "$((i+j))"
+;;
+
+2)
+echo "$((i-j))"
+;;
+
+3)
+echo "$((i*j))"
+;;
+
+4)
+echo "scale=2;$i/$j" | bc -l
+;;
+
+esac
+
+
+________________________________________
+
+Task #3
+Q3. Write a script that perform file operations based on provided option:
+A) Display Content
+B) Append Content
+C) Overwrite Content
+D) Delete Content
+Tips: create two logs file and put any date on the files. Like test.log test1.log. If end_user enter A, then it will show the content of test.log if it will enter B, then it will append test1.log to test.log and so on. The main file is test.log
+
+
+read -p "Enter file operation code from 1 to 4 :" code
+
+case $code in
+
+1)
+cat test.log
+;;
+
+2)
+cat test.log >> test1.log
+;;
+
+3)
+cat test.log > test1.log
+;;
+
+4)
+cat /dev/null > test.log
+;;
+
+esac
+
+

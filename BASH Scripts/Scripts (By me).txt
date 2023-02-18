@@ -1,0 +1,765 @@
+How to store value in variable
+
+Command: echo Today is `date`
+output:        Today is Mon 15 Feb 2021 08:46:07 AM EST
+
+Command:  echo Today is $(date)
+output:        Today is Mon 15 Feb 2021 08:46:07 AM EST
+
+
+total_mem=`free | grep Mem | awk '{print $2}'`
+or total_mem=$(free | grep Mem | awk '{print $2}')
+
+used_mem=`free | grep Mem | awk '{print $3}'`
+or used_mem=$(free | grep Mem | awk '{print $3}')
+
+used_disk_per=`df -hT | grep dev/sda1 | awk '{print $6}' | cut -d"%" -f1`
+or used_disk_per=$(df -hT | grep dev/sda1 | awk '{print $6}' | cut -d"%" -f1)
+
+
+Bash command for calculation
+x=`echo "($load_avg/$core)*(100)" | bc -l`
+
+
+
+_______________________________________________________________________
+
+
+FOR DISK (Any single hard disk)
+#!/bin/bash
+used_disk_per=`df -hT | grep dev/sda1 | awk '{print $6}' | cut -d"%" -f1`
+#echo $used_disk_per
+if [[ "used_disk_per" -ge 30 ]]
+then
+echo "disk_aler:"$used_disk_per
+fi
+___________________________________________________________________
+
+FOR DISK (Multiple hard disks) 1st attempt
+#!/bin/bash
+used_disk1_per=`df -hT | grep dev/sda1 | awk '{print $6}' | cut -d"%" -f1`
+used_disk2_per=`df -hT | grep /dev/sdb | awk '{print $6}' | cut -d"%" -f1`
+Date=`date -R | cut -d"-" -f1`
+#echo $used_disk_per
+if [[ "used_disk1_per" -ge 30 ]]
+then
+echo "disk1_alert:""$used_disk1_per at $Date"
+fi
+if [[ "used_disk2_per" -ge 1 ]]
+then
+echo "disk2_alert:""$used_disk2_per at $Date"
+fi
+
+
+_____________
+
+
+FOR DISK (Multiple hard disks) Better one 2nd attempt
+#!/bin/bash
+Disk_Data=`df -hT | grep -Ev "tmpfs|Filesystem" | awk '{print $1,$6}'`
+echo $Disk_Data
+Date=`date -R | cut -d"-" -f1`
+disk1_per=`echo $Disk_Data | awk '{print $2}'`
+disk2_per=`echo $Disk_Data | awk '{print $4}'`
+if [[ ${disk1_per%?} -ge 30 ]]
+then
+echo "disk1_alert:""$disk1_per at $Date"
+fi
+if [[ ${disk2_per%?} -ge 1 ]]
+then
+echo "disk2_alert:""$disk2_per at $Date"
+fi
+
+NOTE: In above script -E show extended grep you may aslo write egrep  or grep -E and v is for opposite lines
+
+_________________________
+ 
+ 
+FOR DISK (Multiple hard disks) Best One using df -hT
+#!/bin/bash
+df -hT | grep -Ev "tmpfs|Filesystem" | awk '{print $1,$6}' | while read Disk_Data
+do
+limit=1
+Date=`date -R | cut -d"-" -f1`
+drive_name=`echo $Disk_Data | awk '{print $1}'`
+used_per=`echo $Disk_Data | awk '{print $2}'`
+if [[ ${used_per%?} -ge $limit ]];
+then
+echo "Drive:""$drive_name used $used_per at $Date"
+fi
+done
+
+FOR DISK (Multiple hard disks) using lsblk
+#!/bin/bash
+lsblk | grep "/" | awk '{print $1,$7}' | while read Data
+do
+limit=1
+Date=`date -R | cut -d"-" -f1`
+drive_name=`echo $Data | awk '{print $1}' | sed 's/├─//g'`
+mount_point=`echo $Data | awk '{print $2}'`
+for_per=`df -hT $mount_point | grep -Ev "tmpfs|Filesystem" | awk '{print $1,$6}'`
+used_per=`echo $for_per | awk '{print $2}'`
+if [[ ${used_per%?} -ge $limit ]];
+then
+echo "Drive:""$drive_name mounted at $mount_point used $used_per at $Date"
+fi
+done
+
+
+NOTE: Script Guideline for disk space script:
+https://www.cyberciti.biz/tips/shell-script-to-watch-the-disk-space.html
+https://dev.to/peter279k/how-to-use-bash-script-to-develop-disk-usage-monitor-4bkd
+
+
+
+
+_________________
+
+
+
+
+
+IOSTAT
+
+#!/bin/bash
+lsblk | grep -Ev "NAME|rom" | awk '{print $1}' | sed 's/└─//g;s/├─//g' | while read Data
+do
+value=`iostat $Data | tail -n +7 | sed '/^$/d' | awk '{print $3,$4}'`
+kb_read=`echo $value | awk '{print $1}'`
+kb_write=`echo $value | awk '{print $2}'`
+echo "Drive_Name:""$Data     KB Read per Sec $kb_read       KB Write per sec $kb_write"
+done
+
+
+
+
+
+
+___________
+
+FOR MEMORY:
+#!/bin/bash
+total_mem=`free | grep Mem | awk '{print $2}'`
+echo $total_mem
+used_mem=`free | grep Mem | awk '{print $3}'`
+echo $used_mem
+used_mem_percentage=`echo "$used_mem"*100/"$total_mem" | bc`    OR    echo $((used_mem*100/total_mem))
+Date=`date -R | cut -d"-" -f1`
+#echo $used_mem_percentage
+if [[ "$used_mem_percentage" -ge 60 ]]
+then
+echo "memory alert:""$used_mem_percentage at $Date"
+fi
+
+___________________________________________
+
+
+
+
+FOR CPU
+#!/bin/bash
+existing_cpu=$(nproc --all)
+echo $existing_cpu
+utilize_cpu=$(cat /proc/loadavg | awk "{print \$1}")
+echo $utilize_cpu
+current_cpu_percentage=`bc <<< "$utilize_cpu"*100/"$existing_cpu"`
+#echo $current_cpu_percentage
+if [[ "$current_cpu_percentage" -ge 60 ]]
+then
+#((cpu_alert ++))
+echo "CPU Alert Value:"$current_cpu_percentage
+fi
+
+
+_________________________
+
+Taking values in kb mb gb tb and converting only in kb   | using else-if (elif)
+
+#!/bin/bash
+read -p "Enter your value: " data
+value=`echo $data | awk '{print $1}'`
+scale=`echo $data | awk '{print $2}'`
+if [ $scale = "kb" ]
+then
+echo "$data"
+elif [ $scale = "mb" ]
+then
+a=$((value*1024))
+echo "$a kb"
+elif [ $scale = "gb" ]
+then
+b=$((value*1048576))
+echo "$b kb"
+elif [ $scale = "tb" ]
+then
+c=$((value*1073741824))
+echo "$c kb"
+else "Enter in this format please: your_value space  kb or gb or tb"
+fi
+
+________________________________________________________________________________
+
+
+Taking values in kb mb gb tb and converting only in kb   | using case BY Me
+
+#!/bin/bash
+
+read -p "Enter your value: " data
+value=`echo $data | awk '{print $1}'`
+scale=`echo $data | awk '{print $2}'`
+
+echo -n "The value $value $scale is equivalent to"
+
+case $scale in
+
+ kb | KB)
+echo  -n " $value KB "
+;;
+
+ mb | MB)
+a=$((value*1024))
+echo -n " $a KB "
+;;
+
+gb | GB)
+b=$((value*1048576))
+echo -n " $b KB "
+;;
+
+tb | TB)
+c=$((value*1073741824))
+echo -n " $c KB "
+;;
+
+*)
+    echo -n "Please enter value in kb mb gb or tb with a space after your value"
+    ;;
+esac
+
+
+NOTE :echo -e =  enable interpretation of backslash escapes means k - e k flag k sath /n /t /d ki special meaning kaam karegi simple echo mai "/" as it is print hojaega aur uski special meaning count nh hogi.  whereas, -n makes print in same line. avoid -n flag in scripts
+
+
+
+						Same script cahnged by waqas bhai
+
+#!/bin/bash
+
+read -p "Enter your value: " data
+value=`echo $data | awk '{print $1}'`
+scale=`echo $data | awk '{print $2}'`
+
+echo "The value in $scale  is $value"
+
+case $scale in
+
+ kb | KB)
+echo -e "$value kb\n"
+;;
+
+ mb | MB)
+a=$((value*1024))
+echo -e "$a kb\n"
+;;
+
+gb | GB)
+b=$((value*1048576))
+echo -e "$b kb\n"
+;;
+
+tb | TB)
+c=$((value*1073741824))
+echo -e "$c kb\n"
+;;
+
+*)
+    echo  "Please enter value in kb mb gb or tb"
+    ;;
+esac
+
+exit
+
+
+
+_________________________________________________________________________________
+
+Same Script by salman | Abdullah
+#!/bin/bash
+
+echo -n "Enter size in kb, mb, gb: "
+read size
+num=$(echo $size | grep -Eo '[0-9]{1,9}')
+div=$(echo $size | grep -o '..$')
+echo "$div is division"
+
+case $div in
+
+KB | "kb")
+echo "Input is alredy in KB : $size"
+;;
+
+MB | "mb")
+echo $(($num * 1000))"KB"
+;;
+
+GB | "gb")
+echo $(($num * 1000000))"KB"
+;;
+esac
+
+
+
+
+
+
+________________________________________
+
+
+
+
+
+
+Neglecting files starting with dot
+timestamp=`date +%s`
+b=`find . -mtime -1 | cut -d/ -f2 | grep -v  "^\."`
+tar -czvf "backup-$timestamp.tar.gz" $b
+
+
+Including all files
+timestamp=`date +%s`
+b=`find . -mtime -1 -type f`
+tar -czvf "backup-$timestamp.tar.gz" $b
+
+By waqas bhai
+#!/bin/bash
+BACKUPFILE=backup-$(date +%s)
+tar cvfz - `find . -mtime -1 -type f -print` > $BACKUPFILE.tar.gz
+Note: print is not necessary
+
+NOTE:
+Search for files mpodified in last 24 hrs
+find . -mtime -1 -type f
+
+Search for directories modified in last 24 hrs
+find . -mtime -1 -type d
+
+Search for both files and directories modified in last 24 hrs
+find . -mtime -1 
+
+
+____________________
+Above Script placed in different folder and executing in different folder
+
+#!/bin/bash
+path="/home/kamil/folder"
+cd $path
+p=$(pwd)
+#echo $p
+if [[ ${path} == ${p} ]]; then
+touch abcd
+fi
+
+
+path="/home/kamil/folder/"
+cd $path
+
+
+___________________________
+
+
+Task 1: Use if Statement in order to check if the following file have read, wirte or execute permission on it for current loged in user. 
+
+filename="/home/server/devrims"
+user=`whoami`
+
+if [ -r $filename ] && [  -w $filename ] && [  -x $filename ] ;  then
+     echo "User $user have read write and execute permissions on file ${filename##*/}"
+
+elif [ -w $filename ] && [  -x $filename ] ;  then
+     echo "User $user have write and execute permissions on file ${filename##*/}"
+
+elif [ -w $filename ] && [ -r $filename ] ;  then
+     echo "User $user have write and read permissions on file ${filename##*/}"
+
+elif [ -r $filename ] && [  -x $filename ] ; then
+     echo "User $user have read and execute permissions on file ${filename##*/}"
+
+elif [ -r $filename ]  ; then
+     echo "User $user have only read permission on file ${filename##*/}"
+
+elif [ -w $filename ]  ; then
+     echo "User $user have only write permission on file ${filename##*/}"
+
+else
+     echo "User $user have only execute permission on file ${filename##*/}"
+fi
+
+
+________________________________________
+
+Script to create database dump(sql file) of all databases present in mysql
+
+https://stackoverflow.com/questions/1963884/how-to-automatically-backup-all-mysql-databases-into-sql-statement
+
+user=root
+pwd=kamil123
+time=`date +"%a-%d%b%Y-%s"`
+
+databases=$(mysql -u $user -p$pwd -e "SHOW DATABASES;" | tr -d "| " | grep -Ev "(Database|sys|mysql|information_schema|performance_schema)");
+for db in $databases; do
+mysqldump -u $user -p$pwd $db > /root/$time-$db.sql
+
+done
+
+if 3rd line in above script is commented out
+mysqldump -u $user -p$pwd $db > /root/$(date +"%a-%d%b%Y-%s")-$db.sql
+
+
+
+_________________________________________
+
+Script that seraches only for those lines that contain a specific string like "kamil" whether its "abcdkamil" or "1234kamilxyz "and  replaces this string with another string. (The script will replace string "kamil" as well as "kamil1234"  "abcdkamil" in the file if it exists)
+
+read -p "Enter the string you want to replace: " str1
+read -p "Enter the string you want to replace with: " str2
+
+filename="/home/server/file.txt"
+lines=`grep -ino "$str1" $filename | cut -d: -f1`
+for item in $lines
+do
+`sed -i "${item}s/${str1}/${str2}/" $filename`
+done
+
+Script that  searches only for those lines that contain a specific string like "kamil" and  replaces this string with another string. (The script will replace only string "kamil" NOT "kamil1234"  NOT  "abcdkamil" in the file if it exists)
+
+
+read -p "Enter the string you want to replace: " str1
+read -p "Enter the string you want to replace with: " str2
+
+filename="/home/server/file.txt"
+lines=`grep -inwo "$str1" $filename | cut -d: -f1`
+for item in $lines
+do
+`sed -i "${item}s/${str1}/${str2}/" $filename`
+done
+
+
+https://unix.stackexchange.com/questions/475908/how-can-i-find-all-lines-containing-two-specified-words
+
+_________________________________________________________________________________________
+-w flag significance
+
+server@debian:~$ grep -ni "kamil" file.txt
+1:kamil 192.167.9.9 500 i am kamilbot 1234kamil
+2:193.88.9.00 400 kamil  jahanzaibbot kamil
+4:kamil12345
+5:xyzkamil
+6:kamil 123kamil
+8:2.121.21.21 my work is limited kamil
+10:24.23.32.23  kamil 400  am 420danishROBOT
+11:192.167.9.0  kamil bhai
+13:2.322.32.32 was there were kamil umer
+14:hello i am kamil
+16:i am happy to work for company my name is KAMIL
+server@debian:~$ grep -nio "kamil" file.txt
+1:kamil
+1:kamil
+1:kamil
+2:kamil
+2:kamil
+4:kamil
+5:kamil
+6:kamil
+6:kamil
+8:kamil
+10:kamil
+11:kamil
+13:kamil
+14:kamil
+16:KAMIL
+server@debian:~$ grep -niow "kamil" file.txt
+1:kamil
+2:kamil
+2:kamil
+6:kamil
+8:kamil
+10:kamil
+11:kamil
+13:kamil
+14:kamil
+16:KAMIL
+
+_______________________________________________________________________________________________
+
+REMOTE LOGIN USING EXPECT and pass pharase without user interaction
+
+#!/usr/bin/expect -f
+
+spawn ssh kamil@192.168.0.22
+
+expect "Enter passphrase"
+send  "1234\r"
+interact
+
+
+______________________________________________________________________
+
+WP Search and replace as well as database backup before replacement. (This script is placed in directory where wp-config is placed)  
+  
+time=`date +"%a-%d%b%Y-%s"`
+db_name=$(cat wp-config.php | grep DB_NAME | awk '{print $3}' | cut -d"'" -f2)
+db_user=$(cat wp-config.php | grep  DB_USER | awk '{print $3}' | cut -d"'" -f2)
+db_pwd=$(cat wp-config.php | grep DB_PASSWORD | awk '{print $3}' | cut -d"'" -f2)
+
+mysqldump -u $db_user -p$db_pwd $db_name > /var/www/html/services/$time-backup.sql
+
+read -p "Enter the string you want to replace: " str1
+read -p "Enter the string you want to replace with: " str2
+
+replacements=$(wp search-replace "$str1" "$str2" --dry-run --allow-root)
+Num_of_replacements=$(echo $replacements | cut -d":" -f2 | awk '{print $1}')
+
+if [ "$Num_of_replacements" -gt 0 ]; then
+        wp search-replace "$str1" "$str2" --allow-root
+
+else
+        rm $time-backup.sql
+fi
+
+
+****************
+
+WP Search and replace as well as database backup before replacement. (This script is placed in any random directory where wp-config is not placed)  
+
+time=`date +"%a-%d%b%Y-%s"`
+db_name=$(cat /var/www/html/services/wp-config.php | grep DB_NAME | awk '{print $3}' | cut -d"'" -f2)
+db_user=$(cat /var/www/html/services/wp-config.php | grep  DB_USER | awk '{print $3}' | cut -d"'" -f2)
+db_pwd=$(cat /var/www/html/services/wp-config.php | grep DB_PASSWORD | awk '{print $3}' | cut -d"'" -f2)
+
+mysqldump -u $db_user -p$db_pwd $db_name > /var/www/html/services/$time-backup.sql
+
+read -p "Enter the string you want to replace: " str1
+read -p "Enter the string you want to replace with: " str2
+
+replacements=$(wp search-replace "$str1" "$str2" --dry-run --allow-root --path=/var/www/html/services/)
+Num_of_replacements=$(echo $replacements | cut -d":" -f2 | awk '{print $1}')
+
+if [ "$Num_of_replacements" -gt 0 ]; then
+        wp search-replace "$str1" "$str2" --allow-root  --path=/var/www/html/services/
+
+else
+        rm $time-backup.sql
+fi
+
+*****  *****
+NOTE: instead of absolute path in wp search and replace we can also invoke a function of cd 
+
+ function cd { 
+	builtin cd "$1" 
+}
+
+wp search-replace "$str1" "$str2" --allow-root  --path="$1"
+
+And then provide absolute path of application's folder as argument while runing script  like bash script.sh /va	r/www/html/application/
+
+_____________________________________________________________________________
+
+SUITABLE ONE
+time=`date +"%a-%d%b%Y-%s"`
+read -p "Enter path to web root: " path
+db_name=$(cat "$path/wp-config.php" | grep DB_NAME | awk '{print $3}' | cut -d"'" -f2)
+db_user=$(cat "$path/wp-config.php" | grep  DB_USER | awk '{print $3}' | cut -d"'" -f2)
+db_pwd=$(cat "$path/wp-config.php" | grep DB_PASSWORD | awk '{print $3}' | cut -d"'" -f2)
+
+mysqldump -u $db_user -p$db_pwd $db_name > "$path"/$time-backup.sql
+
+read -p "Enter the string you want to replace: " str1
+read -p "Enter the string you want to replace with: " str2
+
+replacements=$(wp search-replace "$str1" "$str2" --dry-run --allow-root --path="$path")
+Num_of_replacements=$(echo $replacements | cut -d":" -f2 | awk '{print $1}')
+
+if [ "$Num_of_replacements" -gt 0 ]; then
+        echo "Replacements to be made: $Num_of_replacements"
+        read -p "You do want to make replacement or not, yes or no : "  answer
+        case $answer in
+        Y|y)
+                wp search-replace "$str1" "$str2" --allow-root  --path="$path"
+        ;;
+        *)
+                rm  "$path"/$time-backup.sql
+        ;;
+        esac
+
+else
+        rm  "$path"/$time-backup.sql
+fi
+
+_____________________________________
+
+SO FAR BEST
+
+DATE=$(date +"%a-%d%b%Y-%H:%M:%S")
+read -p "Enter application name : " app
+path="/var/www/html/$app"
+
+db_name=$(cat "$path/wp-config.php" | grep DB_NAME | awk '{print $3}' | cut -d"'" -f2)
+db_user=$(cat "$path/wp-config.php" | grep  DB_USER | awk '{print $3}' | cut -d"'" -f2)
+db_pwd=$(cat "$path/wp-config.php" | grep DB_PASSWORD | awk '{print $3}' | cut -d"'" -f2)
+
+mysqldump -u $db_user -p$db_pwd $db_name > "$path"/$app-$DATE.sql
+
+read -p "Enter the string you want to replace: " str1
+read -p "Enter the string you want to replace with: " str2
+
+replacements=$(wp search-replace "$str1" "$str2" --dry-run --allow-root --path="$path")
+Num_of_replacements=$(echo $replacements | cut -d":" -f2 | awk '{print $1}')
+
+if [ "$Num_of_replacements" -gt 0 ]; then
+        echo "Replacements to be made: $Num_of_replacements"
+        read -p "You do want to make replacement or not, for yes press y or Y : "  answer
+        case $answer in
+        Y|y)
+                wp search-replace "$str1" "$str2" --allow-root  --path="$path"
+        ;;
+        *)
+                rm  "$path"/$app-$DATE.sql
+        ;;
+        esac
+
+else
+        rm  "$path"/$app-$DATE.sql
+fi
+
+_____________________________________
+Best of all (BY ME)
+
+DATE=$(date +"%a-%d%b%Y-%H:%M:%S")
+read -p "Enter application name: " app
+
+while [[ -z "$app" ]]; do
+        read -p "Input is empty, Re-Enter application name: " app
+done
+
+path="/var/www/html/$app"
+
+db_name=$(cat "$path/wp-config.php" | grep DB_NAME | awk '{print $3}' | cut -d"'" -f2)
+db_user=$(cat "$path/wp-config.php" | grep  DB_USER | awk '{print $3}' | cut -d"'" -f2)
+db_pwd=$(cat "$path/wp-config.php" | grep DB_PASSWORD | awk '{print $3}' | cut -d"'" -f2)
+
+mysqldump -u $db_user -p$db_pwd $db_name > "$path"/$app-$DATE.sql
+
+
+read -p "Enter the string you want to replace: " str1
+        while [[ -z "$str1" ]]; do
+                read -p "Re-Enter the string you want to replace: " str1
+        done
+read -p "Enter the string you want to replace with: " str2
+        while [[ -z "$str2" ]]; do
+                read -p "Re-Enter the string you want to replace with: " str2
+        done
+
+
+Num_of_replacements=$(wp search-replace "$str1" "$str2" --dry-run --allow-root --path="$path" | cut -d":" -f2 | awk '{print $1}' | tail -1)
+
+if [ "$Num_of_replacements" -gt 0 ]; then
+        echo "Replacements to be made: $Num_of_replacements"
+        read -p "Do you want to make replacement or not, for yes press "y/Y" for no press "n/N": "  answer
+                while [[ "$answer" != `echo "$answer" | egrep "^([y]|[Y]|[N]|[n])$" ` ]] || [[ -z "$answer" ]]; do
+                        read -p "The provided value is not correct. Please re-enter: " answer
+                done
+
+        case $answer in
+        Y|y)
+                wp search-replace "$str1" "$str2" --allow-root  --path="$path"
+        ;;
+        n|N)
+                rm  "$path"/$app-$DATE.sql
+        ;;
+        esac
+
+else
+        echo "Replacements found: $Num_of_replacements"
+        rm  "$path"/$app-$DATE.sql
+fi
+
+
+______________________________________________________________
+Best of all (Most latest)
+
+DATE=$(date +"%a-%d%b%Y-%H:%M:%S")
+read -p "Enter application name: " app
+path="/var/www/html/$app"
+
+while [[ "$app" == `echo "$app" | grep "^([a-zA-Z0-9-])$"` ]] || [[ "$app" == `echo $app | grep "//"` ]]  || [[ "$app" == [/]* ]] || [[ "$app" != *[!@#\$.%^\&*()_+]* ]] || [[ "$app" == [.]* ]] || [[ -z "$app" ]] || [[ ! -d "$path" ]]; do
+        read -p "Input is empty, Re-Enter application name: " app
+        path="/var/www/html/$app"
+done
+#path="/var/www/html/$app"
+db_name=$(cat "$path/wp-config.php" | grep DB_NAME | awk '{print $3}' | cut -d"'" -f2)
+db_user=$(cat "$path/wp-config.php" | grep  DB_USER | awk '{print $3}' | cut -d"'" -f2)
+db_pwd=$(cat "$path/wp-config.php" | grep DB_PASSWORD | awk '{print $3}' | cut -d"'" -f2)
+
+mysqldump -u $db_user -p$db_pwd $db_name > "$path"/$app-$DATE.sql
+
+
+read -p "Enter the string you want to replace: " str1
+        while [[ -z "$str1" ]]; do
+                read -p "Re-Enter the string you want to replace: " str1
+        done
+read -p "Enter the string you want to replace with: " str2
+        while [[ -z "$str2" ]]; do
+                read -p "Re-Enter the string you want to replace with: " str2
+        done
+
+
+Num_of_replacements=$(wp search-replace "$str1" "$str2" --dry-run --allow-root --path="$path" | cut -d":" -f2 | awk '{print $1}' | tail -1)
+
+if [ "$Num_of_replacements" -gt 0 ]; then
+        echo "Replacements to be made: $Num_of_replacements"
+        read -p "Do you want to make replacement or not, for yes press "y/Y" for no press "n/N": "  answer
+                while [[ "$answer" != `echo "$answer" | egrep "^([y]|[Y]|[N]|[n])$" ` ]] || [[ -z "$answer" ]]; do
+                        read -p "The provided value is not correct. Please re-enter: " answer
+                done
+
+        case $answer in
+        Y|y)
+                wp search-replace "$str1" "$str2" --allow-root  --path="$path"
+        ;;
+        n|N)
+                rm  "$path"/$app-$DATE.sql
+        ;;
+        esac
+
+else
+        echo "Replacements found: $Num_of_replacements"
+        rm  "$path"/$app-$DATE.sql
+fi
+
+______________________________
+Search and replace string in files of directory.
+
+read -p "Enter the path of directory: " path
+read -p "Enter the string you want to replace: " str1
+
+files=`grep -ril $str1 $path | rev |  cut -d"/" -f1 | rev`
+dir_name=`grep -ril $str1 $path | rev |  cut -d"/" -f2 | rev | tail -1`
+
+echo -e "String found in these files of directory $dir_name: \n$files "
+
+read -p "Enter the string you want to replace with: " str2
+for file in $files
+do
+echo "main loop"
+   lines=`grep -inwo "$str1" $path/$file | cut -d: -f1`
+         for line in $lines
+            do
+                echo "inner loop"
+                 `sed -i "${line}s/${str1}/${str2}/I" $path/$file`
+
+            done
+done
+
+
+
+

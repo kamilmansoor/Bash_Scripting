@@ -1,0 +1,127 @@
+for i in {1..10} ; do echo "kamil $i" ; done
+
+kamil 1
+kamil 2
+kamil 3
+kamil 4
+kamil 5
+kamil 6
+kamil 7
+kamil 8
+kamil 9
+kamil 10
+
+
+area="khi lhr isb kpk"
+for i in $area ;
+do
+        echo $i
+        ((i++))
+done
+
+khi
+lhr
+isb
+kpk
+
+NOTE: Airthmetic operations perform in double small brackets like echo $((2+2)) = 4
+
+
+
+
+
+Q1. Write a script that will ask the end-user to provide the data for the employee which are "Employee ID, Employee name, Employee Address & Employee Salary". Once the data is provided then save this data in a log file. Once the end-user provided the data then ask it again if you want to provide another employee data or not.
+Tips: Going to use while loop, case statement and continue and break. 
+
+
+x=10
+while [[ "$x" -ne 0 ]]
+do
+read -p "press key 1 to enter employee data or 2 to exit: " key
+case $key in
+        1)
+        read -p "Enter employee id: " a
+        read -p "Enter employee name: " b
+        read -p "Enter employee salary: " c
+        read -p "Enter employee residence: " d
+        echo -e "$a \n$b \n$c \n$d" >> log.file
+        echo "********************************" >> log.file
+;;
+
+        2)
+        exit
+;;
+esac
+
+done
+
+
+____________________________________________
+Above script is correct but just for knowlege of while loop read below code as well which it is not so good but just for reading
+#faltu code
+echo "for single employee information press key 1"
+echo "for more than single employee press key 2"
+read -p "press key: " x
+case $x in
+1)
+ read -p "Enter employee id: " a
+        read -p "Enter employee name: " b
+        read -p "Enter employee salary: " c
+        read -p "Enter employee residence: " d
+        echo -e "$a \n$b \n$c \n$d" > log.file
+;;
+
+2)
+v=10
+while [[ "$v" -ne 0 ]]
+do
+ read -p "Enter employee id: " a
+        read -p "Enter employee name: " b
+        read -p "Enter employee salary: " c
+        read -p "Enter employee residence: " d
+        echo -e "$a \n$b \n$c \n$d" >> log.file
+done
+;;
+
+*)
+    exit
+
+
+
+
+
+Q2. Write a script for monitoring the log file size. If the log file size become greater then 1 MB then rotate the name of the log file to "filename-timestamp.tar.gz". And the new log file will start saving the data. Please make sure that the original File name will remain the same.
+Tips: Use until loop.    
+
+
+size=`ls -l logs | awk '{print $5}'`
+timestamp=`date +%s`
+until [[ "$size" -lt 1024 ]]
+do
+tar czvf "logs-$timestamp.tar.gz" logs
+cat /dev/null > logs
+size=`ls -l logs | awk '{print $5}'`
+done
+
+In the second last command size value is updated after file(logs) is empty so we initialize size variable again. until mai phir size ki new value store hogi.
+
+
+
+
+
+
+
+
+
+
+__________
+
+
+x=0
+[ -z "$x" ] && echo test
+echo $?
+
+
+
+
+ 

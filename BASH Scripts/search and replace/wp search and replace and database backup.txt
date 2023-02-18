@@ -1,0 +1,50 @@
+#!/bin/bash
+
+read -p "Enter the application name: " appName
+path="/mnt/user_data/home/master/applications/$appName"
+while [[ "$appName" == `echo "$appName" | grep "^([a-zA-Z0-9-])$"` || "$appName" == `echo $appName | grep "//"`  || "$appName" == [/]* || "$appName" != *[!@#\$.%^\&*()_+]* || "$appName" == [.]* || -z "$appName" || ! -d "$path" ]]; do
+        read -p "The provided value is not correct. Please re-enter the application name: " appName
+        path="/mnt/user_data/home/master/applications/$appName"
+done
+
+date=$(date +%F-%T)
+user=$(echo $USER)
+
+db_name=$(grep -i "DB_NAME" $path/public_html/wp-config.php | awk '{print $3}' | cut -d "'" -f2)
+if [[ $user == root ]]; then
+        allow="--allow-root"
+        echo "Running from $user"
+else
+        echo "Running from $user"
+        db_user=-u$(grep -i "DB_USER" $path/public_html/wp-config.php | awk '{print $3}' | cut -d "'" -f2)
+        db_password=-p$(grep -i "DB_PASSWORD" $path/public_html/wp-config.php | awk '{print $3}' | cut -d "'" -f2)
+fi
+
+mysqldump $db_user $db_password $db_name > "$path/private_html/$db_name-$date.sql"
+read -p "Enter Old string: " oldString
+read -p "Enter New string: " newString
+while [[ -z $oldString || -z $newString ]]; do
+        if [[ -z $oldString ]]; then
+                read -p "Empty Input detected enter old string: " oldString
+        fi
+        if [[ -z $newString ]]; then
+                read -p "Empty Input detected enter new string: " newString
+        fi
+done
+replacements=$(wp search-replace "$oldString" "$newString" --dry-run --path="$path/public_html" $allow | grep Success: | awk '{print $2}')
+if [[ "$replacements" > 0 ]]; then
+        echo "$replacements replacements to be made"
+        read -p "Press (yes) to replace and (no) to abort replacements:" value
+
+           while [[ "$value" != `echo "$value" | egrep "^([y][e][s]|[n][o])$"` || -z "$value" ]]; do
+                read -p "The provided value is not correct. Please re-enter (yes/no): " value
+        done
+
+        if [[ "$value" == yes ]]; then
+                wp search-replace "$oldString" "$newString" --path="$path/public_html" $allow
+        elif [[ "$value" == no ]]; then
+                rm "$path/private_html/$db_name-$date.sql"
+        fi
+else
+        rm "$path/private_html/$db_name-$date.sql"
+fi

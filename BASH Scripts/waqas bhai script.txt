@@ -1,0 +1,76 @@
+#!/bin/bash
+function main {
+	time_stamp
+	list_applications_name
+#	get_string_details
+#	check_application_cms
+}
+function list_applications_name {
+	list=($(ls -l /mnt/user_data/home/master/applications/ | sed 1d | grep -v test | awk '{print $9}'))
+	length=${#list[@]}
+		
+	for((i=0,j=1;i<$length;i++,j++));
+        do
+		[[ "$i" == '0' ]] && echo "List of applications present on this server:" && cms_type=$(check_application_cms1) || cms_type=("$cms_type" `check_application_cms1`)
+		echo -e "$j. Application Name: \e[32m${list[$i]}\e[0m CMS: \e[31m${cms_type[$i]}\e[0m"
+        done
+	select_application_name
+}
+function select_application_name {
+	read -p "Enter the application associate number: " application_number
+	until [ -n "$application_number" ] && [ "$application_number" -eq "$application_number" ] 2>/dev/null && [ "$application_number" -gt '0' ] && [ "$application_number" -le "$length" ]; do
+		read -p "The provided value is not correct. Please re-enter the application associated number: " application_number
+	done
+	echo ${list[@]}
+	((application_number--)) && application_name="${list[$application_number]}"
+	echo $application_name	
+}
+function check_application_cms1 {
+	[[ "$USER" == 'root' ]] && allow='--allow-root'
+	wp core is-installed --path="/mnt/user_data/home/master/applications/${list[$i]}/public_html" $allow; output=$(echo $?)
+	[[ "$output" == '0' ]] && echo WORDPRESS
+	
+}
+function check_application_cms {
+	[[ "$user" == 'root' ]] && allow='--allow-root'
+	wp core is-installed --path="$path/public_html" $allow
+       	output=$(echo $?)
+	[[ "$output" == 0 ]] && take_database_credentials && take_database_dump && cms_wordpress	
+}
+function time_stamp {
+	timestamp=$(date +%F-%T)
+}
+function take_database_credentials {	
+	database_name=$(grep -i "DB_NAME" $path/public_html/wp-config.php | awk -F "'" '{print $4}')
+	[[ $USER == 'root' ]] || database_user=$(grep -i "DB_USER" $path/public_html/wp-config.php | awk -F "'" '{print $4}')
+	[[ $USER == 'root' ]] || database_password=$(grep -i "DB_PASSWORD" $path/public_html/wp-config.php | awk -F "'" '{print $4}')
+}
+function take_database_dump {
+	[[ "$user" == 'root' ]] && { database_user=""; database_password=""; } || { database_user="-u${database_user}";  database_password="-p${database_password}"; }
+ 	mysqldump $database_user $database_password $database_name > "$path/private_html/${application_name}-${database_name}-T-${timestamp}.sql"
+}
+function get_string_details {
+	read -p "Enter current string: " current_string
+	read -p "Enter new string: " new_string
+	while [[ -z $current_string || -z $new_string ]]; do
+		[[ -z "$current_string" ]] && read -p "The string value is empty. Please re-enter current string: " current_string
+		[[ -z "$new_string" ]] && read -p "The string value is empty. Please re-enter new string: " new_string
+	done
+}
+function remove_database_dump {
+	[[ "$value" == "no" ]] && rm "$path/private_html/${application_name}-${database_name}-T-${timestamp}.sql" || read -p "Wait for the client reply. After client confirmation press (yes) to remove the database backup or (no) to not remove the database backup: " value1
+	while [[ "$value1" != `echo "$value1" | egrep "^([y][e][s]|[n][o])$"` || -z "$value1" ]]; do
+		read -p "The provided value is not correct. Press (yes) to remove database backup or (no) to not remove the database backup: " value1
+	done
+	[[ "$value1" == "yes" ]] && rm "$path/private_html/${application_name}-${database_name}-T-${timestamp}.sql"
+}
+function cms_wordpress {
+	[[ "$user" == 'root' ]] && allow="--allow-root"
+	replacements=$(wp search-replace "$current_string" "$new_string" --dry-run --path="$path/public_html" $allow | grep Success: | awk '{print $2}')
+	[[ "$replacements" > 0 ]] && read -p "$replacements can be replace. Press (yes) to replace or (no) to abort replacements:" value
+        while [[ "$value" != `echo "$value" | egrep "^([y][e][s]|[n][o])$"` || -z "$value" ]]; do
+        	read -p "The provided value is not correct. Please re-enter (yes/no): " value
+        done
+	[[ "$value" == yes ]] && wp search-replace "$current_string" "$new_string" --path="$path/public_html" $allow && remove_database_dump || remove_database_dump
+}
+main

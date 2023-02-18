@@ -1,0 +1,13 @@
+Server Security Measures:
+
+Go to /etc/pam.d/sshd    and add given line there
+auth required pam_listfile.so item=user sense=deny file=/etc/ssh/sshd.deny
+
+Go or create and enter to /etc/ssh/sshd.deny 
+sshd.deny is a file needs to be created and in this file add any user you want not to login into the server.  
+for e.g:
+nano /etc/ssh/sshd.deny
+mubashir
+   
+
+After checking you can comment out above line that is auth required line

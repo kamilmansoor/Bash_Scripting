@@ -1,0 +1,21 @@
+arr=(prakhar ankit 1 rishabh manish abhinav)
+
+for i in  ${!arr[@]}
+do
+echo "$i ${arr[$i]}"
+done
+
+out:
+0 prakhar
+1 ankit
+2 1
+3 rishabh
+4 manish
+5 abhinav
+
+length=${#arr[@]}
+echo $length
+6
+length=${!arr[@]}
+echo $length
+0 1 2 3 4 5

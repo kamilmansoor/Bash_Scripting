@@ -1,0 +1,292 @@
+https://devqa.io/bash-if-else-statement/
+https://tecadmin.net/check-if-file-has-read-write-execute-permission-bash-script/
+
+x=5
+if [ "$x" -eq 5 ]; then echo "equals 5"; else echo "does not equal 5";
+fi
+
+IF-Else Basic Statement
+
+
+#!/bin/bash
+#name=bilal
+read -p "Enter name:" s
+if [[ $s = "bilal" ]]  OR   if [ $s -eq 100 ]  |   for name use =s
+then
+echo "nikal"
+else
+echo "welcome sir"
+fi
+
+
+#!/bin/bash
+read -p "Enter Number:" s
+if [[ $s -ge 10 ]]
+then
+echo "welcome"
+else
+echo "invalid number"
+fi
+
+
+#!/bin/bash
+read -p "Enter Username please:" a
+if [ "$a" == "devrims" ]
+then
+echo "welcome devrims!"
+else
+echo "welcome guest"
+fi
+
+______________________
+
+#!/bin/bash
+read -p "enter first number:" a
+read -p "enter second number:" b
+
+if [ $a -gt $b ]; then
+        echo "$a is greater than $b"
+
+elif [ $b -gt $a ]; then
+        echo "$b is greater than $a"
+
+else
+        echo "Numbers are equal"
+fi
+
+
+
+____________________________
+Nested if
+#!/bin/bash
+Another way of user input
+
+if [ $1 -eq $2  ]; then
+        if [ $2 -eq $3 ]; then
+                echo "ALL Numbers are equal"
+        else 
+               echo "ALL Numbers are not equal"
+        fi
+else
+        echo "ALL Numbers are not equal"
+fi
+
+How to run above script:
+bash script.sh 2 3 4    or    bash script.sh kamil umer abdullah
+since we have not used read command  so we directly giving user input along with bash command. It is just another way of diving user input like read command
+__________________________________________
+
+By Salman bhai
+#!/bin/bash
+echo $1
+echo $2
+echo $3
+if [[ "$1" -gt "$2" ]] && [[ "$1" -gt "$3" ]]
+then
+    echo $1
+elif [[ "$2" -gt "$1" ]] && [[ "$2" -gt "$3" ]]
+then
+    echo $2
+elif [[ "$1" == "$2" ]] && [[ "$2" == "$3" ]]
+then
+echo "100%"
+else
+    echo $3
+fi
+
+
+IF ELSE COMPARING THREE NUMBERS USING LADDER IF(ELSE IF)
+
+read -p "Enter first number:" a
+read -p "Enter second number:" b
+read -p "Enter third number:" c
+
+if [ $a -gt $b ] && [ $a -gt $c ] ; then
+                 echo "$a is the greatest number"
+
+elif [ $b -gt $a ] && [ $b -gt $c ] ; then
+                 echo "$b is the greatest number"
+
+elif [ $a == $b ] && [ $b == $c ] ; then
+                echo "Numbers are same"
+
+else
+                echo "$c is the greatest number"
+
+fi
+
+
+________________________________________
+
+
+IF ELSE COMPARING THREE NUMBERS USING LADDER IF(ELSE IF) More Better
+
+read -p "Enter first number:" a
+read -p "Enter second number:" b
+read -p "Enter third number:" c
+
+if [ $a -gt $b ] && [ $a -gt $c ] ; then
+                 echo "$a is the greatest number"
+
+elif [ $b -gt $c ]  ; then
+                 echo "$b is the greatest number"
+
+elif [ $a == $b ] && [ $b == $c ] ; then
+                echo "Numbers are same"                  
+
+else
+                echo "$c is the greatest number"
+
+fi
+
+
+________________________________
+
+IF ELSE COMPARING THREE NUMBERS USING Nested If (Script has limitation since not displaying right output when equal numbers are input)
+
+read -p "Enter value of i :" i
+read -p "Enter value of j :" j
+read -p "Enter value of k :" k
+
+if [ $i -gt $j ] ; then
+    if [ $i -gt $k ] ; then
+        echo "$i is greatest"
+    fi
+
+
+else
+    if [ $j -gt $k ] ;  then
+        echo "$j is greatest"
+    else
+         echo "$k is greatest"
+     fi
+fi
+
+______________________________________
+
+IF ELSE COMPARING THREE NUMBERS USING Nested If
+
+read -p "Enter value of i :" i
+read -p "Enter value of j :" j
+read -p "Enter value of k :" k
+
+if [ $i -gt $j ] ; then
+    if [ $i -gt $k ] ; then
+        echo "$i is greatest"
+    fi
+
+elif [ $i == $j ] && [ $i == $k ] ; then
+      echo "Numbers are same"
+
+else
+    if [ $j -gt $k ] ;  then
+        echo "$j is greatest"
+    else
+         echo "$k is greatest"
+     fi
+fi
+
+
+
+
+______________________________
+
+Above Script by Abdullah
+#!/bin/bash
+a=$1
+b=$2
+c=$3
+
+if [ $a -gt $b ] ; then
+        if [ $a -gt $c ] ; then
+        echo "$a is greatest"; exit
+        fi
+elif [ $b -gt $c ]; then
+        echo "$b is greatest"; exit
+elif [ $c -gt $b ]; then
+        echo "$c is greatest" ; exit
+else
+        echo all numbers are equal
+
+
+fi
+
+
+___________________________________
+
+Comparing marks of student in three different subjects, if any of subjet's marks is <37 the student is fail
+read -p "Enter marks of first subject :" i
+read -p "Enter marks of second subject :" j
+read -p "Enter marks of third subject :" k
+
+if [ $i -gt 37 ] && [ $j -gt 37 ] && [ $k -gt 37 ]; then
+           echo "pass! and your total numbers are $((i+j+k))"
+
+else
+           echo "fail! and your total numbers are $((i+j+k)) "
+
+fi
+
+
+
+Comparing marks of student in three different subjects, if any of subjet's marks is less than 37 the student is fail using nested if
+
+read -p "Enter marks of first subject :" i
+read -p "Enter marks of second subject :" j
+read -p "Enter marks of third subject :" k
+
+if [ $i -gt 37 ] ; then
+     if [ $j -gt 37 ] && [ $k -gt 37 ] ; then
+           echo "pass! and your total numbers are $((i+j+k))"
+     else
+           echo "fail! and your total numbers are $((i+j+k)) "
+     fi
+
+else
+           echo "fail! and your total numbers are $((i+j+k)) "
+
+fi
+
+
+_________________________________________________
+
+
+
+Task 1: Use if Statement in order to check if the following file have read, wirte or execute permission on it for current loged in user. 
+
+filename="/home/server/devrims"
+user=`whoami`
+
+if [ -r $filename ] && [  -w $filename ] && [  -x $filename ] ;  then
+     echo "User $user have read write and execute permissions on file ${filename##*/}"
+
+elif [ -w $filename ] && [  -x $filename ] ;  then
+     echo "User $user have write and execute permissions on file ${filename##*/}"
+
+elif [ -w $filename ] && [ -r $filename ] ;  then
+     echo "User $user have write and read permissions on file ${filename##*/}"
+
+elif [ -r $filename ] && [  -x $filename ] ; then
+     echo "User $user have read and execute permissions on file ${filename##*/}"
+
+elif [ -r $filename ]  ; then
+     echo "User $user have only read permission on file ${filename##*/}"
+
+elif [ -w $filename ]  ; then
+     echo "User $user have only write permission on file ${filename##*/}"
+
+else
+     echo "User $user have only execute permission on file ${filename##*/}"
+fi
+
+
+________________________________________
+
+
+
+
+
+
+
+
+

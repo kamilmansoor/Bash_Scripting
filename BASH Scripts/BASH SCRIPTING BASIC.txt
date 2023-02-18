@@ -1,0 +1,45 @@
+BASH SCRIPTING BASIC 
+
+when we write bash file.sh it will not go to shebang line that is (#!/bin/bash) the first line of code, instead it will just go to default path of /bin/bash to execute code. If we write "./ file.sh" then it will go to shebang line and read the first line to decide from where to execute this code. Agar bash file ki location mai /bin/bash se change kar k /home/kamil/bash kardunga and my code's shebang line will be (#!/home/kamil/bash) then ye script bash file.sh se nhi chalegi because kernel level pe bash ek alias bana hua hai jo /bin/bash pe redirect hota hai. Agar bash /home/kamil/bash pe locate hai  se script chalani hai to phir "/home/kamil/bash file.sh" likhna hoga ya phir "./ file.sh" 
+
+
+STEP#1: Create a script file with ".sh" extension like file_name.sh
+STEP#2:  Add script in the file. The first line is mendatory.
+#!/bin/bash
+touch my_customer
+cat headings >> my_customer                                                                   (headings is the name of file where headings are stored)
+cat logs | awk '{print $1, $4, $5}' >>  my_customer
+
+NOTE: > is used for overwritten and >> is used for Append (yani pehle se jo hai us k neche print karne k lye) my_customer file mai pehle se kuch content stored hai tou >> us content k neche us ko add kardega agar > lagaenge to file mai pehle wala sab remove hojaega or sirf new content store hojaega) 
+
+STEP#3: bash file_name.sh 
+The above command will then run the script in .sh file. You will then see a new file with name my_customer.
+
+nano my_customer HEHEHEH
+
+_____________________________________________________________________
+
+How to store value in variable
+
+Command: echo Today is `date`
+output:        Today is Mon 15 Feb 2021 08:46:07 AM EST
+
+Command:  echo Today is $(date)
+output:        Today is Mon 15 Feb 2021 08:46:07 AM EST
+
+
+total_mem=`free | grep Mem | awk '{print $2}'`
+or total_mem=$(free | grep Mem | awk '{print $2}')
+
+used_mem=`free | grep Mem | awk '{print $3}'`
+or used_mem=$(free | grep Mem | awk '{print $3}')
+
+used_disk_per=`df -hT | grep dev/sda1 | awk '{print $6}' | cut -d"%" -f1`
+or used_disk_per=$(df -hT | grep dev/sda1 | awk '{print $6}' | cut -d"%" -f1)
+
+
+Bash command for calculation
+x=`echo "($load_avg/$core)*(100)" | bc -l`
+
+
+_________________________________________________________________________

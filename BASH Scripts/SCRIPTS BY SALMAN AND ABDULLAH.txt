@@ -1,0 +1,56 @@
+LOAD Alert scripts
+
+Scripts by salman and abdullah
+
+
+
+For CPU LOAD
+
+#!/bin/bash
+existing_cpu=$(nproc --all)
+echo $existing_cpu
+utilize_cpu=$(cat /proc/loadavg | awk "{print \$1}")
+echo $utilize_cpu
+current_cpu_percentage=`bc <<< "$utilize_cpu"*100/"$existing_cpu"`
+#echo $current_cpu_percentage
+if [[ "$current_cpu_percentage" -ge 60 ]]
+then
+#((cpu_alert ++))
+echo "CPU Alert Value:"$current_cpu_percentage
+fi
+
+
+For memory(RAM) LOAD
+#/bin/bash
+a=$(free | grep Mem | awk '{print $2}')
+echo totalmemory=$a
+b=$(free | grep Mem | awk '{print $3}')
+echo usedmemory=$b
+current_memory_percentage=`bc <<< "$b"*100/"$a"`
+#echo $current_memory_percentage
+if [[ "$current_memory_percentage" -ge 90 ]]
+then
+echo $current_memory_percentage
+fi
+
+
+Multiple Disks
+#!/bin/bash
+df -hT | grep -vE 'tmpfs|Filesystem' | awk '{print $1, $6}' i| while read output
+do
+max=80
+echo $output
+used=$(echo $output | awk '{print $2}')
+partition=$(echo $output | awk '{print $1}')
+if [[ ${used%?} -ge $max ]]; then
+echo "The partition \"$partition\" has used $used at $( date "+DATE: %D TIME: %T")" >> disk.txt
+fi
+done
+
+NOTE: Stores value in %
+
+
+
+
+
+

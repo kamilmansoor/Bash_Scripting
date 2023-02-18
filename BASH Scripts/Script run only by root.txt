@@ -1,0 +1,25 @@
+#!/bin/bash
+if [[ $UID -ne 0 ]]; then
+echo "This script must be run as root"
+exit
+fi
+read -p "Enter your value: " data
+value=`echo $data | awk '{print $1}'`
+scale=`echo $data | awk '{print $2}'`
+if [ $scale = "kb" ]
+then
+echo "$data"
+elif [ $scale = "mb" ]
+then
+a=$((value*1024))
+echo "$a kb"
+elif [ $scale = "gb" ]
+then
+b=$((value*1048576))
+echo "$b kb"
+elif [ $scale = "tb" ]
+then
+c=$((value*1073741824))
+echo "$c kb"
+else "Enter value in kb gb mb or tb only"
+fi
